@@ -1,0 +1,88 @@
+
+// For those who want the bleeding edge
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name = 'forge'
+            url = 'https://files.minecraftforge.net/maven'
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
+    }
+}
+
+repositories {
+    maven {
+        url 'https://jitpack.io'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+version = '1.0'
+group = 'com.gmail.game.yadokari1130'
+archivesBaseName = 'S2C'
+
+minecraft {
+    version = '1.12.2-14.23.5.2768'
+    runDir = 'run'
+
+    mappings = 'snapshot_20171003'
+}
+
+configurations {
+    shadow
+    compile.extendsFrom shadow
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Jar) {
+    compileJava.options.encoding = 'UTF-8'
+    compileApiJava.options.encoding = 'UTF-8'
+}
+
+dependencies {
+    implementation group: 'commons-io', name: 'commons-io', version: '2.6'
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
+    shadow group: 'com.github.yadokari1130', name: 'JavaSpeechAPI', version: '1.0'
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property 'version', project.version
+    inputs.property 'mcversion', project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+shadowJar {
+    archiveName = tasks.jar.archiveName
+    configurations = [project.configurations.shadow]
+    relocate('org.apache', 'com.gmail.game.yadokari1130.org.apache')
+    relocate('com.google', 'com.gmail.game.yadokari1130.com.google')
+}
+
+reobf {
+    shadowJar {}
+}
